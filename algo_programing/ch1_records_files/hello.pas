@@ -1,6 +1,9 @@
-Program Hello(input,output);
-uses crt,dos;
+Program hello(input,output);
+
+uses crt, dos;
+
 Begin
-	writeln('Hello world');
-	writeln('Good work keep on going!!!!');
+	writeln('Hello World');
+	writeln('Good Bye');
 End.
+	
