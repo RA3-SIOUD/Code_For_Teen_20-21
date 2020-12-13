@@ -1,0 +1,46 @@
+.container {
+    margin: 2%;
+    padding: 7px;
+    background-color: rgb(221, 182, 182);
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    align-self: center;
+    border: solid 1px black;
+}
+
+.control {
+    display: flex;
+    flex-direction: row;
+    padding: 3px;
+}
+
+.item {
+    width: 50%;
+}
+
+label {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 2em;
+    padding: 2px;
+    margin: 3px;
+}
+
+input:hover {
+    border: rgb(0, 0, 0) 1px solid;
+}
+
+.button {
+    width: 100%;
+    background-color: blueviolet;
+    color: cornsilk;
+    border-radius: 10px;
+    box-shadow: darkcyan;
+}
