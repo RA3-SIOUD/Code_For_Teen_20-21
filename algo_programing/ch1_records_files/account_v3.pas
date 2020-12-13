@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Program Accounting;
 Uses Wincrt,Crt,dos;
 Type
@@ -24,633 +25,1095 @@ Type
 Var
   Choix : 1..2;
   FP: TFPlan;
-  FJournal: TFJournal;
+	FJournal:TFJournal;
   Exit: Boolean;
   Res: Char;
-  extrait: Text;
+	
  (* fnFormatString this functon format a string with a givin size*)
-
-Function fnFormatString(vStr:String;strln:Integer): String;
-Var
-  extentionStr: String;
-  i: 1..255;
+function fnFormatString(vStr:String;strln:Integer):String;
+var extentionStr:String;
+    i:1..255;
 Begin
-  If Length(vStr) >= strln Then
-    fnFormatString := Copy(vStr,1,strln)
-  Else
-    extentionStr := '';
-  For i:=Length(vStr) To strln Do
-    Begin
-      extentionStr := extentionStr+' ';
-    End;
-  fnFormatString := Copy(vStr,1,strln)+extentionStr;
-End;
+  if Length(vStr) >= strln Then
+	      fnFormatString:=Copy(vStr,1,strln)
+	Else
+	      extentionStr:='';
+	      for i:=Length(vStr) to strln do
+				Begin
+				   extentionStr:=extentionStr+' ';
+				end;
+	      fnFormatString:=Copy(vStr,1,strln)+extentionStr;
+end;
+
  (* fnDateToString this functon format a TDate record to string*)
-
-Function fnDateToString(dt:TDate): String;
-Var
-  day,month,year: String;
+function fnDateToString(dt:TDate):String;
+var day,month,year:String;
 Begin
-  Str(dt.Day,day);
-  Str(dt.Month,month);
-  Str(dt.Year,year);
-  fnDateToString := Concat(day,'/',month,'/',year);
-End;
+  str(dt.Day,day);
+	str(dt.Month,month);
+  str(dt.Year,year);
+	fnDateToString:=Concat(day,'/',month,'/',year);
+end;
+
 (* =========       Gestion Plan Comptable    ==================*)
-
 Procedure prGestionPC(Var FP:TFPlan);
- (* ------------------------------------------- prSaisieCompte ------------------------------*)
 
-Procedure prSaisieCompte(Var FP:TFPlan);
-Var
-  TmpCompte,tmp: TCompte;
-  Rep: Char;
-Begin
-  Clrscr;
-  Gotoxy(20,4);
-  Writeln('Code      :');
-  Gotoxy(20,6);
-  Writeln('Libele    :');
-  Gotoxy(40,4);
-  Readln(TmpCompte.Code);
-  Gotoxy(40,6);
-  Readln(TmpCompte.Libelle);
-  Repeat
-    Gotoxy(23,10);
-    Write('Voullez vous enregistrer ce compte (O/N)');
-    Read(Rep);
-  Until (Upcase(Rep) In ['O','N']);
-  If Upcase(Rep)='O' Then
-    Begin
- {$I-}
-      Reset(FP);
- {$I+}
-      If Ioresult<>0 Then Rewrite(FP);
-      While Not Eof(FP) Do
-        read(FP,tmp);
-(* Atteindre fin de Fichier *)
+   (* ------------------------------------------- prSaisieCompte ------------------------------*)
+	Procedure prSaisieCompte(Var FP:TFPlan);
+	Var
+	  TmpCompte,tmp: TCompte;
+	  Rep: Char;
+	Begin
+	  Clrscr;
+	  Gotoxy(20,4);Writeln('Code      :');
+	  Gotoxy(20,6);Writeln('Libele    :');
+	  Gotoxy(40,4);Readln(TmpCompte.Code);
+	  Gotoxy(40,6);Readln(TmpCompte.Libelle);
+	  Repeat
+	    Gotoxy(23,10);
+	    Write('Voullez vous enregistrer ce compte (O/N)');Read(Rep);
+	  Until (Upcase(Rep) In ['O','N']);
 
-(*
+	  If Upcase(Rep)='O' Then
+	  Begin
+	 			{$I-}
+	      Reset(FP);
+	 			{$I+}
+	 			If IOResult<>0 Then Rewrite(FP); 
+	    	while not EOF(FP) do read(FP,tmp); (* Atteindre fin de Fichier *)
+				(*
 				   you can replace the line above With
 					 seek(FP,FileSize(FP));
 					 Or
 					 SeekEof(FP);
 				*)
-      Write(FP,TmpCompte);
-    End;
-  Close(FP);
-End;
-Procedure prAfficherComptes(Var FP:TFPlan);
-Var
-  TmpCompte: TCompte;
-  cde: String;
-Begin
-  Clrscr;
-  Gotoxy(32,1);
-  Writeln('PLAN COMTABLE');
-  Writeln('===============================================================================');
-  Writeln('=      Code Compte          |              Libelle Compte                     =');
-  Writeln('===============================================================================');
- {$I-}
-  Reset(FP);
- {$I+}
-  If Ioresult=0 Then
-    Begin
-      While Not Eof(FP) Do
-        Begin
-          Read(FP,TmpCompte);
-          Str(TmpCompte.Code,cde);
-          Writeln('| ',fnFormatString(cde,24),' | ',fnFormatString(TmpCompte.Libelle,47),'|');
-          Writeln('-------------------------------------------------------------------------------')
-          ;
-        End;
-    End
-  Else Writeln('Probleme Fichier : ', Ioresult);
-  Close(FP);
-End;
- (* ------------------------------------------- prMAJCompte ------------------------------*)
+	    	Write(FP,TmpCompte);
+	 End;
+	Close(FP);
+	End;
 
-Procedure prMAJCompte(Var FP:TFPlan);
-Var
-  bufferComptes: TPlanComptable;
-  tmp: TCompte;
-  code: Integer;
-  indice: 0..1000;
-  nbComptes: 0..1000;
-  oldLibelle,newLibelle: String[50];
-  accountExist: Boolean;
-Begin
-  Clrscr;
-  Gotoxy(32,4);
-  Write('MISE A JOURS COMPTE');
-  Gotoxy(20,6);
-  Write('Code      :');
-  Readln(code);
- {$I-}
-  Reset(FP);
- {$I+}
-  If Ioresult=0 Then
-    Begin
-      indice := 0;
-      nbComptes := 0;
-      While Not Eof(FP) Do
-        Begin
-          indice := indice+1;
-          Read(FP,tmp);
-          bufferComptes[indice] := tmp;
-        End;
-      nbComptes := indice;
-      indice := 0;
-      accountExist := False;
-      While indice<nbComptes Do
-        Begin
-          indice := indice+1;
-          If bufferComptes[indice].code=code
-            Then
-            Begin
-              oldLibelle := bufferComptes[indice].libelle;
-              accountExist := True;
-            End;
-        End;
-      If accountExist=True Then
-        Begin
-          Gotoxy(20,8);
-          Write('Ancienne Libelle    :',oldLibelle);
-          Gotoxy(20,10);
-          Write('Nouvelle Libelle    :');
-          Read(newLibelle);
-          indice := 0;
-          While indice<nbComptes Do
-            Begin
-              indice := indice+1;
-              If (bufferComptes[indice].code=code) Then bufferComptes[indice].libelle := newLibelle;
-            End;
-          Rewrite(FP);
-          For indice:=1 To nbComptes Do
-            Write(FP,bufferComptes[indice]);
-        End
-      Else
-        Begin
-          Gotoxy(20,20);
-          Writeln('Compte du code ',code, ' est introuvable.');
-        End;
-    End
-  Else Writeln('Probleme Fichier : ', Ioresult);
-  Close(FP);
-End;
- (* ------------------------------------------- prSupprimerCompte ------------------------------*)
+	Procedure prAfficherComptes(Var FP:TFPlan);
+  var TmpCompte:TCompte;
+	cde:string;
+	Begin
+		ClrScr;
+		GotoXY(32,1);Writeln('PLAN COMTABLE');
+		writeln('===============================================================================');
+		writeln('=      Code Compte          |              Libelle Compte                     =');
+		writeln('===============================================================================');
 
-Procedure prSupprimerCompte(Var FP:TFPlan);
-Var
-  bufferComptes,newBuffer: TPlanComptable;
-  tmp: TCompte;
-  code: Integer;
-  indice,i: 0..1000;
-  nbComptes: 0..1000;
-  accountExist: Boolean;
-Begin
-  Clrscr;
-  Gotoxy(32,4);
-  Write('SUPPRESSION COMPTE');
-  Gotoxy(20,6);
-  Write('Code      :');
-  Readln(code);
- {$I-}
-  Reset(FP);
- {$I+}
-  If Ioresult=0 Then
-    Begin
-      indice := 0;
-      nbComptes := 0;
-      While Not Eof(FP) Do
-        Begin
-          indice := indice+1;
-          Read(FP,tmp);
-          bufferComptes[indice] := tmp;
-        End;
-      nbComptes := indice;
-      accountExist := False;
-      i := 1;
-      For indice:=1 To nbComptes Do
-        Begin
-          If bufferComptes[indice].code<>code
-            Then
-            Begin
-              newBuffer[i] := bufferComptes[indice];
-              i := i+1;
-            End
-          Else
-            accountExist := True;
-        End;
-      If accountExist=True Then
-        Begin
-          Gotoxy(20,8);
-          Write('Compte ',code, ' est supprimer.');
-          Rewrite(FP);
-          For indice:=1 To i-1
-            Do
-            Write(FP,newBuffer[indice]);
-        End
-      Else
-        Begin
-          Gotoxy(20,20);
-          Writeln('Compte du code ',code, ' est introuvable.');
-        End;
-    End
-  Else Writeln('Probleme Fichier : ', Ioresult);
-  Close(FP);
-End;
+    {$I-}
+		Reset(FP);
+		{$I+}
+	  if IOResult=0 then
+		Begin
+			while Not Eof(FP) Do
+			Begin
+				Read(FP,TmpCompte);
+				str(TmpCompte.Code,cde);
+				writeln('| ',fnFormatString(cde,24),' | ',fnFormatString(TmpCompte.Libelle,47),'|');
+				writeln('-------------------------------------------------------------------------------');
+			end;
+		End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FP);
+	end;
+
+  (* ------------------------------------------- prMAJCompte ------------------------------*)
+  Procedure prMAJCompte(Var FP:TFPlan);
+	Var
+	  bufferComptes:TPlanComptable;
+	  tmp: TCompte;
+	  code: integer;
+		indice:0..1000;
+		nbComptes:0..1000;
+		oldLibelle,newLibelle:string[50];
+		accountExist:boolean;
+	Begin
+		Clrscr;
+		Gotoxy(32,4);Write('MISE A JOURS COMPTE');
+	  Gotoxy(20,6);Write('Code      :');Readln(code);
+		{$I-}
+		Reset(FP);
+		{$I+}
+	  if IOResult=0 then
+			Begin
+			  indice:=0;
+				nbComptes:=0;
+				while Not Eof(FP) Do
+				Begin
+				  indice:=indice+1;
+					Read(FP,tmp);
+					bufferComptes[indice]:=tmp;
+				end;
+				
+				nbComptes:=indice;
+				indice:=0;
+				accountExist:=False;
+				
+				while indice<nbComptes Do
+				Begin
+				  indice:=indice+1;
+					if bufferComptes[indice].code=code
+							then
+							  begin
+									oldLibelle:=bufferComptes[indice].libelle;
+							    accountExist:=true;
+								end;
+				end;
+	
+	      if  accountExist=true  then
+				begin
+						Gotoxy(20,8);Write('Ancienne Libelle    :',oldLibelle);
+						Gotoxy(20,10);Write('Nouvelle Libelle    :');Read(newLibelle);
+						indice:=0;
+						while indice<nbComptes Do
+						Begin
+						  indice:=indice+1;
+							if(bufferComptes[indice].code=code) then bufferComptes[indice].libelle:=newLibelle;
+						end;
+			
+						ReWrite(FP);
+						for indice:=1 to nbComptes Do
+							  Write(FP,bufferComptes[indice]);
+			   End
+				 Else begin Gotoxy(20,20);Writeln('Compte du code ',code, ' est introuvable.'); end;
+			End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FP);
+	end;
+
+
+  (* ------------------------------------------- prSupprimerCompte ------------------------------*)
+	 Procedure prSupprimerCompte(Var FP:TFPlan);
+	Var
+	  bufferComptes,newBuffer:TPlanComptable;
+	  tmp: TCompte;
+	  code: integer;
+		indice,i:0..1000;
+		nbComptes:0..1000;
+		accountExist:boolean;
+	Begin
+		Clrscr;
+		Gotoxy(32,4);Write('SUPPRESSION COMPTE');
+	  Gotoxy(20,6);Write('Code      :');Readln(code);
+		{$I-}
+		Reset(FP);
+		{$I+}
+	  if IOResult=0 then
+		Begin
+		    indice:=0;
+				nbComptes:=0;
+				while Not Eof(FP) Do
+				Begin
+				  indice:=indice+1;
+					Read(FP,tmp);
+					bufferComptes[indice]:=tmp;
+				end;
+				
+				nbComptes:=indice;
+				accountExist:=False;
+			  i:=1;
+				
+				for indice:=1 to nbComptes Do
+				Begin
+					if bufferComptes[indice].code<>code
+					then
+					  begin
+						  newBuffer[i]:=bufferComptes[indice];
+							i:=i+1;
+						end
+					Else
+					    accountExist:=true;
+				end;
+
+	      if  accountExist=true  then
+				begin
+						Gotoxy(20,8);Write('Compte ',code, ' est supprimer.');
+						ReWrite(FP);
+						for indice:=1 to i-1
+					  Do
+							  Write(FP,newBuffer[indice]);
+			   End
+				 Else begin Gotoxy(20,20);Writeln('Compte du code ',code, ' est introuvable.'); end;
+		End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FP);
+	end;
+		
+
 Var
   ChMenu: 1..5;
-  quit: Boolean;
+	quit:Boolean;
 Begin
-  Clrscr;
-  Gotoxy(30,2);
-  Writeln('Gestion plan comptable');
-  Gotoxy(20,6);
-  Writeln('1 : Ajoutez des comptes.');
-  Gotoxy(20,8);
-  Writeln('2 : Affichez la liste des comptes.');
-  Gotoxy(20,10);
-  Writeln('3 : Mettre a jour un compte.');
-  Gotoxy(20,12);
-  Writeln('4 : Supprimez un compte.');
-  Gotoxy(20,14);
-  Writeln('5 : Retour Menu Principal');
-  Gotoxy(15,25);
-  Write('Votre Choix:');
-  Repeat
-    Readln(ChMenu);
-  Until (ChMenu In [1..5]);
-  Case ChMenu Of
-    1: prSaisieCompte(FP);
-    2: prAfficherComptes(FP);
-    3: prMAJCompte(FP);
-    4: prSupprimerCompte(FP);
-    5: quit := True;
-  End;
+	  Clrscr;
+	  Gotoxy(30,2);  Writeln('Gestion plan comptable');
+	  Gotoxy(20,6);  Writeln('1 : Ajoutez des comptes.');
+	  Gotoxy(20,8);  Writeln('2 : Affichez la liste des comptes.');
+	  Gotoxy(20,10); Writeln('3 : Mettre a jour un compte.');
+	  Gotoxy(20,12); Writeln('4 : Supprimez un compte.');
+		Gotoxy(20,14); Writeln('5 : Retour Menu Principal');
+	  Gotoxy(15,25); Write('Votre Choix:');
+	  Repeat
+	    Readln(ChMenu);
+		Until (ChMenu In [1..5]);
+	  Case ChMenu Of
+	    1: prSaisieCompte(FP);
+	    2: prAfficherComptes(FP);
+			3: prMAJCompte(FP);
+			4: prSupprimerCompte(FP);
+			5: quit:= true;
+	  End;
 End;
+
+
+
 (* ============   Gestion Journal    ====================*)
+Procedure prGestionJournal(Var FJournal:TFJournal;var FPlan:TFPLan);
+		(* ------------------------------------------- prSaisiePiece ------------------------------*)
+	function fnlookUpForAccount(code:integer;var FPlan:TFPLan):String;
+	var tmpCompte:TCompte;
+	    compteExiste: boolean;
+	Begin
+		 {$I-}
+	      Reset(FPlan);
+	 	 {$I+}
+		 if IOResult = 0 Then
+		 Begin
+		   compteExiste:=false;
+			 While not Eof(FPlan) Do
+			 Begin
+			 		Read(Fplan,tmpCompte);
+					if (tmpCompte.Code = code) then
+					     begin
+							  fnLookUpForAccount:=tmpCompte.Libelle;
+								compteExiste:=true;
+							 end
+			 end;
+		 End;
+     if Not compteExiste then 
+     				fnLookUpForAccount:='Compte n''existe pas. Veillez l''ajouter';
+		 close(FPlan);
+	end;
 
-Procedure prGestionJournal(Var FJournal:TFJournal;Var FPlan:TFPLan);
  (* ------------------------------------------- prSaisiePiece ------------------------------*)
+	Procedure prSaisePiece(Var FJournal:TFJournal;var FPlan:TFPLan);
+	var    tmpEcriture,tmp:TEcriture;
+				 Rep:Char;
+		 Begin
+		  	Clrscr;
+				Gotoxy(10,2);Writeln('          S A I S I E    P I E C E  C O M P T A B L E            ');
+	  		Gotoxy(10,4);Writeln('Date de la piece   : __/__/____');
+	  		Gotoxy(10,5);Writeln('Libelle Ecriture   : ________________________________________________');
+				Gotoxy(10,6);Writeln('Compte a Debiter   : ____');
+				Gotoxy(10,7);Writeln('Montant a Debiter  : ___________');
+				Gotoxy(10,8);Writeln('Compte a crediter  : ____');
+				Gotoxy(10,9);Writeln('Montant a crediter : ___________');
 
-Function fnlookUpForAccount(code:Integer;Var FPlan:TFPLan): String;
-Var
-  tmpCompte: TCompte;
-  compteExiste: Boolean;
-Begin
- {$I-}
-  Reset(FPlan);
- {$I+}
-  If Ioresult = 0 Then
-    Begin
-      compteExiste := False;
-      While Not Eof(FPlan) Do
-        Begin
-          Read(Fplan,tmpCompte);
-          If (tmpCompte.Code = code) Then
-            Begin
-              fnLookUpForAccount := tmpCompte.Libelle;
-              compteExiste := True;
-            End
-        End;
-    End;
-  If Not compteExiste Then
-    fnLookUpForAccount := 'Compte n''existe pas. Veillez l''ajouter';
-  Close(FPlan);
-End;
- (* ------------------------------------------- prSaisiePiece ------------------------------*)
-
-Procedure prSaisePiece(Var FJournal:TFJournal;Var FPlan:TFPLan);
-Var
-  tmpEcriture,tmp: TEcriture;
-  Rep: Char;
-Begin
-  Clrscr;
-  Gotoxy(10,2);
-  Writeln('          S A I S I E    P I E C E  C O M P T A B L E            ');
-  Gotoxy(10,4);
-  Writeln('Date de la piece   : __/__/____');
-  Gotoxy(10,5);
-  Writeln('Libelle Ecriture   : ________________________________________________');
-  Gotoxy(10,6);
-  Writeln('Compte a Debiter   : ____');
-  Gotoxy(10,7);
-  Writeln('Montant a Debiter  : ___________');
-  Gotoxy(10,8);
-  Writeln('Compte a crediter  : ____');
-  Gotoxy(10,9);
-  Writeln('Montant a crediter : ___________');
-  With tmpEcriture.DateEcriture Do
-    Begin
-      Gotoxy(31,4);
-      Readln(Day);
-      Gotoxy(34,4);
-      Readln(Month);
-      Gotoxy(37,4);
-      Readln(Year);
-    End;
-  Gotoxy(31,5);
-  Readln(tmpEcriture.LibelleEcriture);
-  Gotoxy(31,6);
-  Readln(tmpEcriture.DBCompte);
-  Gotoxy(38,6);
-  Write(fnlookUpForAccount(tmpEcriture.DBCompte,FPlan));
-  Gotoxy(31,7);
-  Readln(tmpEcriture.MntDebit);
-  Gotoxy(31,8);
-  Readln(tmpEcriture.CrCompte);
-  Gotoxy(38,8);
-  Write(fnlookUpForAccount(tmpEcriture.CrCompte,FPlan));
-  Gotoxy(31,9);
-  Readln(tmpEcriture.MntCredit);
-  Repeat
-    Gotoxy(23,25);
-    Write('Voullez vous enregistrer cette piece (O/N) ');
-    Read(Rep);
-  Until (Upcase(Rep) In ['O','N']);
-  If Upcase(Rep)='O' Then
-    Begin
- {$I-}
-      Reset(FJournal);
- {$I+}
-      If Ioresult<>0 Then Rewrite(FJournal);
-      While Not Eof(FJournal) Do
-        read(FJournal,tmp);
-
-(*
-				   Atteindre fin de Fichier
+				with tmpEcriture.DateEcriture do  Begin
+					GotoXY(31,4);Readln(Day);
+					GotoXY(34,4);Readln(Month);
+					GotoXY(37,4);Readln(Day);
+				end;
+				GotoXY(31,5);Readln(tmpEcriture.LibelleEcriture);
+				GotoXY(31,6);Readln(tmpEcriture.DBCompte);
+				GotoXY(38,6);Write(fnlookUpForAccount(tmpEcriture.DBCompte,FPlan));
+				GotoXY(31,7);Readln(tmpEcriture.MntDebit);
+				GotoXY(31,8);Readln(tmpEcriture.CrCompte);
+				GotoXY(38,8);Write(fnlookUpForAccount(tmpEcriture.CrCompte,FPlan));
+				GotoXY(31,9);Readln(tmpEcriture.MntCredit);
+	  Repeat
+	    Gotoxy(23,25);
+	    Write('Voullez vous enregistrer cette piece (O/N) ');Read(Rep);
+	  Until (Upcase(Rep) In ['O','N']);
+	  If Upcase(Rep)='O' Then
+	  Begin
+	 			{$I-}
+	      Reset(FJournal);
+	 			{$I+}
+	 			If IOResult<>0 Then Rewrite(FJournal); 
+	    	while not EOF(FJournal) do read(FJournal,tmp);
+				(*
+				   Atteindre fin de Fichier 
 				   you can replace the line above With
 					 seek(FJournal,FileSize(FJournal));
 					 Or
 					 SeekEof(FJournal)
 				*)
-      Write(FJournal,TmpEcriture);
-      Close(FJournal);
-    End;
-End;
- (* ------------------------------------------- prModifierPiece ------------------------------*)
+	    	Write(FJournal,TmpEcriture);
+				Close(FJournal);
+	 	End;
+		
+	end;
 
-Procedure prModifierPiece(Var FJournal:TFJournal;Var FPlan:TFPLan);
-Begin
-  Writeln('prModifierPiece not yet implemented');
-End;
- (* ------------------------------------------- prListerPieces ------------------------------*)
+	(* ------------------------------------------- prModifierPiece ------------------------------*)
+	Procedure prModifierPiece(Var FJournal:TFJournal;var FPlan:TFPLan);
+	begin
+	  WriteLn('prModifierPiece not yet implemented');
 
-Procedure prListerPiece(Var FJournal:TFJournal;Var FPlan:TFPLan);
-Var
-  tmpEcriture: TEcriture;
-  currentFileSize: Longint;
-  compteDebit,compteCredit: String;
-Begin
-  Clrscr;
- {$I-}
-  Reset(FJournal);
- {$I+}
-  If Ioresult=0 Then
-    Begin
-      currentFileSize := Filesize(FJournal);
-      Gotoxy(10,2);
-      Writeln('           J O U R N A L    C O M P T A B L E            ');
-      Writeln('Taille de Fichier',currentFileSize);
-      Writeln('===============================================================================');
-      Writeln('| #  Date | Cpt Debit | CptCredit | Libelle                  | Debit   |Credit|');
-      Writeln('===============================================================================');
-      While Not Eof(FJournal) Do
-        Begin
-          Read(FJournal,tmpEcriture);
-          With tmpEcriture Do
-            Begin
-              Write(Filepos(FJournal): 3, ' ');
-              Write(fnFormatString(fnDateToString(DateEcriture),10));
-              Writeln('            ',fnFormatString(LibelleEcriture,40));
-              Str(DBCompte,compteDebit);
-              Write('             ',fnFormatString(compteDebit,10));
-              Write('           ');
-              Write(fnFormatString(fnlookUpForAccount(DBCompte,FPlan),25));
-              Writeln(MntDebit:10:3);
-              Write('                         ');
-              Str(CRCompte,compteCredit);
-              Write(fnFormatString(compteCredit,10));
-              Write('   ');
-              Write(fnFormatString(fnlookUpForAccount(CRCompte,FPlan),25));
-              Writeln('     ',MntCredit:10:3);
-            End;
-        End;
-    End
-  Else Writeln('Probleme Fichier : ', Ioresult);
-  Close(FJournal);
-End;
- (* ------------------------------------------- prExtraitCompte ------------------------------*)
+	end;
 
-Procedure prExtraitCompte(Var FJournal:TFJournal;Var FPlan:TFPLan; Var extrait:Text);
-Var
-  code: Integer;
-  tmpecriture: tecriture;
-Begin
-  Clrscr;
-  Writeln('E X T R A I T    D E    C O M P T E');
-  Gotoxy(10,4);
-  Write('CODE: ');
-  Gotoxy(17,4);
-  Read(code);
-  If fnlookupforaccount(code,fplan)<>'Compte n''existe pas. Veillez l''ajouter' Then
-    Begin
- {$I-}
-      Reset(fjournal);
- {$I+}
-      If Ioresult<>0 Then
-        Writeln('Probleme de fichier Erreur Num: ',Ioresult)
-      Else
-        Begin
-          Rewrite(extrait);
-          Writeln(extrait,'<!DOCTYPE html><body> <table><thead><span>',code,'</span><span>',
-                  fnlookupforaccount(code,fplan),'</span></thead><tbody>');
-          While Not Eof(fjournal) Do
-            Begin
-              read(fjournal,tmpecriture);
-              If (tmpecriture.dbcompte =code) Or (tmpecriture.crcompte=code) Then
-                Begin
-                  Write(extrait,'<tr><td>',tmpecriture.dateecriture.day:2,'/',tmpecriture.
-                        dateecriture.Month:2,'/',tmpecriture.dateecriture.Year:4,'</td><td>',
-                        tmpecriture.LibelleEcriture,'</td>');
-                  If tmpEcriture.DbCompte=Code Then
-                    Writeln(extrait,'<td>',TmpEcriture.MNTDebit:10:3,'</td><td></td>')
-                  Else
-                    Writeln(extrait,'<td></td><td>',TmpEcriture.MNTCredit:10:3,'</td>')
-                End;
-            End;
-          Writeln(extrait,'</tr></tbody></table></body></html>');
-          Close(extrait);
-        End
-    End
-  Else
-    Writeln('Compte n"existe pas');
-  Close(Fjournal);
-End;
- {****prExportToCSV exports all record of journal to CSV file****}
+	(* ------------------------------------------- prListerPieces ------------------------------*)
+	Procedure prListerPiece(Var FJournal:TFJournal;var FPlan:TFPLan);
+	var tmpEcriture:TEcriture;
+	    currentFileSize:LongInt;
+			compteDebit,compteCredit:string;
+	begin
+	 ClrScr;
+    {$I-}
+		Reset(FJournal);
+		{$I+}
+	  if IOResult=0 then
+		Begin
+		  currentFileSize:=FileSize(FJournal);
+		  Gotoxy(10,2);Writeln('           J O U R N A L    C O M P T A B L E            ');
+			Writeln('Taille de Fichier',currentFileSize);
+		  writeln('===============================================================================');
+		  writeln('| #  Date | Cpt Debit | CptCredit | Libelle                  | Debit   |Credit|');
+		  writeln('===============================================================================');
+			while Not Eof(FJournal) Do
+			Begin
+				Read(FJournal,tmpEcriture);
+				with tmpEcriture do
+				begin
+						write(FilePos(FJournal):3, ' ');
+						write(fnFormatString(fnDateToString(DateEcriture),10));
+						writeln('            ',fnFormatString(LibelleEcriture,40));
+						str(DBCompte,compteDebit);
+						write('             ',fnFormatString(compteDebit,10));
+						write('           ');
+					  write(fnFormatString(fnlookUpForAccount(DBCompte,FPlan),25));
+						writeln(MntDebit:10:3);
+						write('                         ');
+						str(CRCompte,compteCredit);
+						write(fnFormatString(compteCredit,10));
+						write('   ');
+						write(fnFormatString(fnlookUpForAccount(CRCompte,FPlan),25));
+						writeln('     ',MntCredit:10:3);
+				end;
+			end;
+		End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FJournal);
+		
+	end;
 
-Procedure prExportToCSV(Var Fjournal:TFjournal; Var Fplan:TFplan);
-Var
-  strCode: String;
-  vCSV: Text;
-  tmpEcriture: tEcriture;
-  code: Integer;
-Begin
-  Clrscr;
-  Writeln('E X P O R T    T O    C S V');
-  Gotoxy(10,4);
-  Write('CODE: ');
-  Gotoxy(17,4);
-  read(code);
-  If fnlookupforaccount(code,fplan)<>'Compte n''existe pas. Veillez l''ajouter' Then
-    Begin
-      Str(code,strCode);
-      Assign(vCSV,strCode+fnlookupforaccount(code,fplan)+'.csv');
- {$I+}
-      Reset (fjournal);
- {$I-}
-      If Ioresult<>0 Then
-        Writeln('Probleme de fichier Erreur Num: ',Ioresult)
-      Else
-        Begin
-          Rewrite (vCSV);
-          Writeln(vCSV,'Date;libele;Mnt_Debit;Mnt_Credit');
-          While Not (Eof(fjournal)) Do
-            Begin
-              read (fjournal,tmpecriture);
-              If (tmpecriture.dbcompte =code) Or (tmpecriture.crcompte=code) Then
-                Begin
-                  With tmpEcriture Do
-                    Begin
-										if DbCompte=code then 
-                      Writeln(vCSV,fnDateToString(DateEcriture),';',LibelleEcriture,';',MntDebit: 7:3,';','')
-											else
-											Writeln(vCSV,fnDateToString(DateEcriture),';',LibelleEcriture,';','',';',MntCredit:7:3);
-                    End;
-                End;
-            End;
-          Close(vCSV);
-        End;
-    End;
-  Close (fjournal);
-End;
- (* prSupprimerEcriture to delete ecriture *)
+		(* ------------------------------------------- prExtraitCompte ------------------------------*)
+	Procedure prExtraitCompte(Var FJournal:TFJournal;var FPlan:TFPLan);
+	begin
+	 ClrScr;
+		WriteLn('prExtraitCompte not yet implemented');
+	end;
 
-Procedure prSupprimerEcriture(Var FJournal:TFJournal;Var FPlan:TFPLan);
+
+ 
+  Procedure prSupprimerEcriture(Var FJournal:TFJournal;Var FPlan:TFPLan);
+	var currentFileSize, position:LongInt;
+	    tmpEcriture:TEcriture;
+			bufferEcriture,newBuffer:Array[1..1000] of TEcriture;
+		  indice,i:0..1000;
+		  nbEcritures:0..1000;
+		  ecritureExist:boolean;
+
+	Begin
+	  ClrScr;
+    {$I-}
+		Reset(FJournal);
+		{$I+}
+	  if IOResult=0 then
+		 Begin
+		   currentFileSize:=FileSize(FJournal);
+		   Gotoxy(10,2);Writeln('           S U P P R E S S I O N    E C R I T U R E             ');
+			 Writeln('Nobre d''ecritures :',currentFileSize:5);
+			 Write('Numero d''ecriture a supprimer :');
+			 Readln(position);
+			 i:=0;
+			 while not Eof(FJournal) do
+			  Begin
+				  i:=i+1;
+					read(FJournal,tmpEcriture);
+					bufferEcriture[i]:= tmpEcriture;
+				end;
+				nbEcritures:=i;
+				for indice:=1 to nbEcritures do
+				Begin
+					if indice<>position then newBuffer[indice]:=bufferEcriture[indice];
+				end;
+				(* rewrite the Buffer again*)
+		    Gotoxy(20,8);Write('Ecriture Numero: ',position, ' est supprimer.');
+				ReWrite(FJournal);
+				for indice:=1 to nbEcritures-1
+			  Do
+					  Write(FJournal,newBuffer[indice]);
+				
+		 end
+		Else
+		  Writeln('File Error Numero:',IOResult);
+
+
+	end;
+
+
 Var
-  currentFileSize, position: Longint;
-  tmpEcriture: TEcriture;
-  bufferEcriture,newBuffer: Array[1..1000] Of TEcriture;
-  indice,i: 0..1000;
-  nbEcritures: 0..1000;
-  ecritureExist: Boolean;
+ ChMenu: 1..5;
+	quit:Boolean;
+
 Begin
-  Clrscr;
- {$I-}
-  Reset(FJournal);
- {$I+}
-  If Ioresult=0 Then
-    Begin
-      currentFileSize := Filesize(FJournal);
-      Gotoxy(10,2);
-      Writeln('           S U P P R E S S I O N    E C R I T U R E             ');
-      Writeln('Nobre d''ecritures :',currentFileSize:5);
-      Write('Numero d''ecriture a supprimer :');
-      Readln(position);
-      i := 0;
-      While Not Eof(FJournal) Do
-        Begin
-          i := i+1;
-          read(FJournal,tmpEcriture);
-          bufferEcriture[i] := tmpEcriture;
-        End;
-      nbEcritures := i;
-      For indice:=1 To nbEcritures Do
-        Begin
-          If indice<>position Then newBuffer[indice] := bufferEcriture[indice];
-        End;
- (* rewrite the Buffer again*)
-      Gotoxy(20,8);
-      Write('Ecriture Numero: ',position, ' est supprimer.');
-      Rewrite(FJournal);
-      For indice:=1 To nbEcritures-1
-        Do
-        Write(FJournal,newBuffer[indice]);
-    End
-  Else
-    Writeln('File Error Numero:',Ioresult);
+	  Clrscr;
+	  Gotoxy(30,2);  Writeln('Journal comptable');
+	  Gotoxy(20,6);  Writeln('1 : Saisie Piece Comptable.');
+	  Gotoxy(20,8);  Writeln('2 : Liste des Pieces Comptable.');
+	  Gotoxy(20,10); Writeln('3 : Modifier Piece Comptable.');
+	  Gotoxy(20,12); Writeln('4 : Extrait de Compte.');
+		Gotoxy(20,14); Writeln('5 : Supprimer Ecriture.');
+		Gotoxy(20,16); Writeln('6 : Retour Menu Principal');
+	  Gotoxy(15,25); Write('Votre Choix:');
+	  Repeat
+	    Readln(ChMenu);
+		Until (ChMenu In [1..5]);
+	  Case ChMenu Of
+	    1: prSaisePiece(FJournal,FPlan);
+	    2: prListerPiece(FJournal,FPlan);
+			3: prModifierPiece(FJournal,FPlan);
+			4: prExtraitCompte(FJournal,FPlan);
+			5: prSupprimerEcriture(FJournal,FPlan);
+			6: quit:= true;
+	  End;
+
 End;
-Var
-  ChMenu: 1..5;
-  quit: Boolean;
-Begin
-  Clrscr;
-  Gotoxy(30,2);
-  Writeln('Journal comptable');
-  Gotoxy(20,6);
-  Writeln('1 : Saisie Piece Comptable.');
-  Gotoxy(20,8);
-  Writeln('2 : Liste des Pieces Comptable.');
-  Gotoxy(20,10);
-  Writeln('3 : Modifier Piece Comptable.');
-  Gotoxy(20,12);
-  Writeln('4 : Extrait de Compte.');
-  Gotoxy(20,14);
-  Writeln('5 : Supprimer Ecriture.');
-  Gotoxy(20,16);
-  Writeln('6 : Export to CSV');
-  Gotoxy(20,18);
-  Writeln('7 : Retour au menu principale ');
-  Gotoxy(15,25);
-  Write('Votre Choix:');
-  Repeat
-    Readln(ChMenu);
-  Until (ChMenu In [1..7]);
-  Case ChMenu Of
-    1: prSaisePiece(FJournal,FPlan);
-    2: prListerPiece(FJournal,FPlan);
-    3: prModifierPiece(FJournal,FPlan);
-    4: prExtraitCompte(FJournal,FPlan,extrait);
-    5: prSupprimerEcriture(FJournal,FPlan);
-    6: prExportToCSV (fjournal,Fplan);
-    7: quit := True;
-  End;
-End;
+
+
+
+
 (*Main Program*)
 Begin
-  Assign(extrait,'extrait.html');
   Assign(FP,'PlanComptable.dat');
-  Assign(FJournal,'Journal.dat');
+	Assign(FJournal,'Journal.dat');
   Exit := False;
   Repeat
 (*Main Loop*)
     Clrscr;
-    Gotoxy(32,2);
-    Write('Comptabilite');
-    Gotoxy(20,6);
-    Write('1: Gestion plan comptable.');
-    Gotoxy(20,8);
-    Write('2: Gestion des ecritures.');
-    Gotoxy(20,10);
-    Write('3: Quit.');
+    Gotoxy(32,2); Write('Comptabilite');
+    Gotoxy(20,6); Write('1: Gestion plan comptable.');
+    Gotoxy(20,8); Write('2: Gestion des ecritures.');
+		Gotoxy(20,10);Write('3: Quit.');
+
+		Repeat
+			GotoXY(23,25); Write('Veillez Choisir  [ 1 , 2 , 3 ] :');Read(Choix);
+		until  choix in [1..3];
+			Case Choix Of
+	      1 : prGestionPC(FP);
+	      2 : prGestionJournal(FJournal,FP);
+				3 : ClrScr;
+			end;
+
     Repeat
-      Gotoxy(23,25);
-      Write('Veillez Choisir  [ 1 , 2 , 3 ] :');
-      Read(Choix);
-    Until choix In [1..3];
-    Case Choix Of
-      1 : prGestionPC(FP);
-      2 : prGestionJournal(FJournal,FP);
-      3 : Clrscr;
-    End;
-    Repeat
-      Gotoxy(23,25);
-      Write('Voullez vous quitter? [ O / N]   :');
-      Read(Res);
+      GotoXY(23,25);Write('Voullez vous quitter? [ O / N]   :'); Read(Res);
     Until (Upcase(Res) In ['O','N']);
     If Upcase(Res)='O' Then
       Exit := True;
   Until (Exit);
+=======
+Program Accounting;
+Uses Wincrt,Crt,dos;
+Type
+  TCompte = Record
+    Code : Integer;
+    Libelle : String[50];
+  End;
+  TDate = Record
+    Day : 1..31;
+    Month : 1..12;
+    Year : 1971..9999;
+  End;
+  TEcriture = Record
+    CRCompte,DBCompte : Integer;
+    DateEcriture : TDate;
+    Folio : Word;
+    LibelleEcriture : String[255];
+    MntDebit,MntCredit : Real;
+  End;
+  TPlanComptable = Array [1..1000] Of TCompte;
+  TJournal = Array [1..5000] Of TEcriture;
+  TFPLan = File Of TCompte;
+  TFJournal = File Of TEcriture;
+
+Var
+  Choix : 1..2;
+  FP: TFPlan;
+	FJournal:TFJournal;
+  Exit: Boolean;
+  Res: Char;
+    extrait:Text;
+ (* fnFormatString this functon format a string with a givin size*)
+function fnFormatString(vStr:String;strln:Integer):String;
+var extentionStr:String;
+    i:1..255;
+Begin
+  if Length(vStr) >= strln Then
+	      fnFormatString:=Copy(vStr,1,strln)
+	Else
+	      extentionStr:='';
+	      for i:=Length(vStr) to strln do
+				Begin
+				   extentionStr:=extentionStr+' ';
+				end;
+	      fnFormatString:=Copy(vStr,1,strln)+extentionStr;
+end;
+
+ (* fnDateToString this functon format a TDate record to string*)
+function fnDateToString(dt:TDate):String;
+var day,month,year:String;
+Begin
+  str(dt.Day,day);
+	str(dt.Month,month);
+  str(dt.Year,year);
+	fnDateToString:=Concat(day,'/',month,'/',year);
+end;
+
+(* =========       Gestion Plan Comptable    ==================*)
+Procedure prGestionPC(Var FP:TFPlan);
+
+   (* ------------------------------------------- prSaisieCompte ------------------------------*)
+	Procedure prSaisieCompte(Var FP:TFPlan);
+	Var
+	  TmpCompte,tmp: TCompte;
+	  Rep: Char;
+	Begin
+	  Clrscr;
+	  Gotoxy(20,4);Writeln('Code      :');
+	  Gotoxy(20,6);Writeln('Libele    :');
+	  Gotoxy(40,4);Readln(TmpCompte.Code);
+	  Gotoxy(40,6);Readln(TmpCompte.Libelle);
+	  Repeat
+	    Gotoxy(23,10);
+	    Write('Voullez vous enregistrer ce compte (O/N)');Read(Rep);
+	  Until (Upcase(Rep) In ['O','N']);
+
+	  If Upcase(Rep)='O' Then
+	  Begin
+	 			{$I-}
+	      Reset(FP);
+	 			{$I+}
+	 			If IOResult<>0 Then Rewrite(FP); 
+
+	    	while not EOF(FP) do read(FP,tmp); (* Atteindre fin de Fichier *)
+				(*
+				   you can replace the line above With
+					 seek(FP,FileSize(FP));
+				*)
+	    	Write(FP,TmpCompte);
+	 End;
+	Close(FP);
+	End;
+
+	Procedure prAfficherComptes(Var FP:TFPlan);
+  var TmpCompte:TCompte;
+	cde:string;
+	Begin
+		ClrScr;
+		GotoXY(32,1);Writeln('PLAN COMTABLE');
+		writeln('===============================================================================');
+		writeln('=      Code Compte          |              Libelle Compte                     =');
+		writeln('===============================================================================');
+
+    {$I-}
+		Reset(FP);
+		{$I+}
+	  if IOResult=0 then
+		Begin
+			while Not Eof(FP) Do
+			Begin
+				Read(FP,TmpCompte);
+				str(TmpCompte.Code,cde);
+				writeln('| ',fnFormatString(cde,24),' | ',fnFormatString(TmpCompte.Libelle,47),'|');
+				writeln('-------------------------------------------------------------------------------');
+			end;
+		End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FP);
+	end;
+
+  (* ------------------------------------------- prMAJCompte ------------------------------*)
+  Procedure prMAJCompte(Var FP:TFPlan);
+	Var
+	  bufferComptes:TPlanComptable;
+	  tmp: TCompte;
+	  code: integer;
+		indice:0..1000;
+		nbComptes:0..1000;
+		oldLibelle,newLibelle:string[50];
+		accountExist:boolean;
+	Begin
+		Clrscr;
+		Gotoxy(32,4);Write('MISE A JOURS COMPTE');
+	  Gotoxy(20,6);Write('Code      :');Readln(code);
+		{$I-}
+		Reset(FP);
+		{$I+}
+	  if IOResult=0 then
+			Begin
+			  indice:=0;
+				nbComptes:=0;
+				while Not Eof(FP) Do
+				Begin
+				  indice:=indice+1;
+					Read(FP,tmp);
+					bufferComptes[indice]:=tmp;
+				end;
+				
+				nbComptes:=indice;
+				indice:=0;
+				accountExist:=False;
+				
+				while indice<nbComptes Do
+				Begin
+				  indice:=indice+1;
+					if bufferComptes[indice].code=code
+							then
+							  begin
+									oldLibelle:=bufferComptes[indice].libelle;
+							    accountExist:=true;
+								end;
+				end;
+	
+	      if  accountExist=true  then
+				begin
+						Gotoxy(20,8);Write('Ancienne Libelle    :',oldLibelle);
+						Gotoxy(20,10);Write('Nouvelle Libelle    :');Read(newLibelle);
+						indice:=0;
+						while indice<nbComptes Do
+						Begin
+						  indice:=indice+1;
+							if(bufferComptes[indice].code=code) then bufferComptes[indice].libelle:=newLibelle;
+						end;
+			
+						ReWrite(FP);
+						for indice:=1 to nbComptes Do
+							  Write(FP,bufferComptes[indice]);
+			   End
+				 Else begin Gotoxy(20,20);Writeln('Compte du code ',code, ' est introuvable.'); end;
+			End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FP);
+	end;
+
+
+  (* ------------------------------------------- prSupprimerCompte ------------------------------*)
+	 Procedure prSupprimerCompte(Var FP:TFPlan);
+	Var
+	  bufferComptes,newBuffer:TPlanComptable;
+	  tmp: TCompte;
+	  code: integer;
+		indice,i:0..1000;
+		nbComptes:0..1000;
+		accountExist:boolean;
+	Begin
+		Clrscr;
+		Gotoxy(32,4);Write('SUPPRESSION COMPTE');
+	  Gotoxy(20,6);Write('Code      :');Readln(code);
+		{$I-}
+		Reset(FP);
+		{$I+}
+	  if IOResult=0 then
+		Begin
+		    indice:=0;
+				nbComptes:=0;
+				while Not Eof(FP) Do
+				Begin
+				  indice:=indice+1;
+					Read(FP,tmp);
+					bufferComptes[indice]:=tmp;
+				end;
+				
+				nbComptes:=indice;
+				accountExist:=False;
+			  i:=1;
+				
+				for indice:=1 to nbComptes Do
+				Begin
+					if bufferComptes[indice].code<>code
+					then
+					  begin
+						  newBuffer[i]:=bufferComptes[indice];
+							i:=i+1;
+						end
+					Else
+					    accountExist:=true;
+				end;
+
+	      if  accountExist=true  then
+				begin
+						Gotoxy(20,8);Write('Compte ',code, ' est supprimer.');
+						ReWrite(FP);
+						for indice:=1 to i-1
+					  Do
+							  Write(FP,newBuffer[indice]);
+			   End
+				 Else begin Gotoxy(20,20);Writeln('Compte du code ',code, ' est introuvable.'); end;
+		End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FP);
+	end;
+		
+
+Var
+  ChMenu: 1..5;
+	quit:Boolean;
+Begin
+	  Clrscr;
+	  Gotoxy(30,2);  Writeln('Gestion plan comptable');
+	  Gotoxy(20,6);  Writeln('1 : Ajoutez des comptes.');
+	  Gotoxy(20,8);  Writeln('2 : Affichez la liste des comptes.');
+	  Gotoxy(20,10); Writeln('3 : Mettre a jour un compte.');
+	  Gotoxy(20,12); Writeln('4 : Supprimez un compte.');
+		Gotoxy(20,14); Writeln('5 : Retour Menu Principal');
+	  Gotoxy(15,25); Write('Votre Choix:');
+	  Repeat
+	    Readln(ChMenu);
+		Until (ChMenu In [1..5]);
+	  Case ChMenu Of
+	    1: prSaisieCompte(FP);
+	    2: prAfficherComptes(FP);
+			3: prMAJCompte(FP);
+			4: prSupprimerCompte(FP);
+			5: quit:= true;
+	  End;
+End;
+
+
+
+(* ============   Gestion Journal    ====================*)
+Procedure prGestionJournal(Var FJournal:TFJournal;var FPlan:TFPLan);
+		(* ------------------------------------------- prSaisiePiece ------------------------------*)
+	function fnlookUpForAccount(code:integer;var FPlan:TFPLan):String;
+	var tmpCompte:TCompte;
+	    compteExiste: boolean;
+	Begin
+		 {$I-}
+	      Reset(FPlan);
+	 	 {$I+}
+		 if IOResult = 0 Then
+		 Begin
+		   compteExiste:=false;
+			 While not Eof(FPlan) Do
+			 Begin
+			 		Read(Fplan,tmpCompte);
+					if (tmpCompte.Code = code) then
+					     begin
+							  fnLookUpForAccount:=tmpCompte.Libelle;
+								compteExiste:=true;
+							 end
+			 end;
+		 End;
+     if Not compteExiste then 
+     				fnLookUpForAccount:='Compte n''existe pas. Veillez l''ajouter';
+		 close(FPlan);
+	end;
+
+ (* ------------------------------------------- prSaisiePiece ------------------------------*)
+	Procedure prSaisePiece(Var FJournal:TFJournal;var FPlan:TFPLan);
+	var    tmpEcriture,tmp:TEcriture;
+				 Rep:Char;
+		 Begin
+		  	Clrscr;
+				Gotoxy(10,2);Writeln('          S A I S I E    P I E C E  C O M P T A B L E            ');
+	  		Gotoxy(10,4);Writeln('Date de la piece   : __/__/____');
+	  		Gotoxy(10,5);Writeln('Libelle Ecriture   : ________________________________________________');
+				Gotoxy(10,6);Writeln('Compte a Debiter   : ____');
+				Gotoxy(10,7);Writeln('Montant a Debiter  : ___________');
+				Gotoxy(10,8);Writeln('Compte a crediter  : ____');
+				Gotoxy(10,9);Writeln('Montant a crediter : ___________');
+
+				with tmpEcriture.DateEcriture do  Begin
+					GotoXY(31,4);Readln(Day);
+					GotoXY(34,4);Readln(Month);
+					GotoXY(37,4);Readln(Year);
+				end;
+				GotoXY(31,5);Readln(tmpEcriture.LibelleEcriture);
+				GotoXY(31,6);Readln(tmpEcriture.DBCompte);
+				GotoXY(38,6);Write(fnlookUpForAccount(tmpEcriture.DBCompte,FPlan));
+				GotoXY(31,7);Readln(tmpEcriture.MntDebit);
+				GotoXY(31,8);Readln(tmpEcriture.CrCompte);
+				GotoXY(38,8);Write(fnlookUpForAccount(tmpEcriture.CrCompte,FPlan));
+				GotoXY(31,9);Readln(tmpEcriture.MntCredit);
+	  Repeat
+	    Gotoxy(23,25);
+	    Write('Voullez vous enregistrer cette piece (O/N) ');Read(Rep);
+	  Until (Upcase(Rep) In ['O','N']);
+	  If Upcase(Rep)='O' Then
+	  Begin
+	 			{$I-}
+	      Reset(FJournal);
+	 			{$I+}
+	 			If IOResult<>0 Then Rewrite(FJournal); 
+	    	while not EOF(FJournal) do read(FJournal,tmp);
+				(*
+				   Atteindre fin de Fichier 
+				   you can replace the line above With
+					 seek(FJournal,FileSize(FJournal));
+					 Or
+					 SeekEof(FJournal)
+				*)
+	    	Write(FJournal,TmpEcriture);
+				Close(FJournal);
+	 	End;
+		
+	end;
+
+	(* ------------------------------------------- prModifierPiece ------------------------------*)
+	Procedure prModifierPiece(Var FJournal:TFJournal;var FPlan:TFPLan);
+	begin
+	  WriteLn('prModifierPiece not yet implemented');
+
+	end;
+
+	(* ------------------------------------------- prListerPieces ------------------------------*)
+	Procedure prListerPiece(Var FJournal:TFJournal;var FPlan:TFPLan);
+	var tmpEcriture:TEcriture;
+	    currentFileSize:LongInt;
+			compteDebit,compteCredit:string;
+	begin
+	 ClrScr;
+    {$I-}
+		Reset(FJournal);
+		{$I+}
+	  if IOResult=0 then
+		Begin
+		  currentFileSize:=FileSize(FJournal);
+		  Gotoxy(10,2);Writeln('           J O U R N A L    C O M P T A B L E            ');
+			Writeln('Taille de Fichier',currentFileSize);
+		  writeln('===============================================================================');
+		  writeln('| #  Date | Cpt Debit | CptCredit | Libelle                  | Debit   |Credit|');
+		  writeln('===============================================================================');
+			while Not Eof(FJournal) Do
+			Begin
+				Read(FJournal,tmpEcriture);
+				with tmpEcriture do
+				begin
+						write(FilePos(FJournal):3, ' ');
+						write(fnFormatString(fnDateToString(DateEcriture),10));
+						writeln('            ',fnFormatString(LibelleEcriture,40));
+						str(DBCompte,compteDebit);
+						write('             ',fnFormatString(compteDebit,10));
+						write('           ');
+					  write(fnFormatString(fnlookUpForAccount(DBCompte,FPlan),25));
+						writeln(MntDebit:10:3);
+						write('                         ');
+						str(CRCompte,compteCredit);
+						write(fnFormatString(compteCredit,10));
+						write('   ');
+						write(fnFormatString(fnlookUpForAccount(CRCompte,FPlan),25));
+						writeln('     ',MntCredit:10:3);
+				end;
+			end;
+		End
+		Else Writeln('Probleme Fichier : ', IOResult);
+		Close(FJournal);
+		
+	end;
+Procedure prExtraitCompte(Var FJournal:TFJournal;Var FPlan:TFPLan; var extrait:Text);
+var
+	code:Integer;
+	tmpecriture:tecriture;
+Begin
+  Clrscr;
+  writeln('E X T R A I T    D E    C O M P T E');
+	GoToXY(10,4);Write('CODE: ');
+	GoTOXY(17,4);Read(code);
+	if fnlookupforaccount(code,fplan)<>'Compte n''existe pas. Veillez l''ajouter' then
+		Begin
+			{$I-}
+				reset(fjournal);
+			{$I+}
+			if Ioresult<>0 then
+				writeln('Probleme de fichier Erreur Num: ',ioresult)
+			else
+				Begin
+					rewrite(extrait);
+					WriteLn(extrait,'<!DOCTYPE html><body> <table><thead><span>',code,'</span><span>',fnlookupforaccount(code,fplan),'</span></thead><tbody>');
+					While not EOF(fjournal) do
+					begin
+						read(fjournal,tmpecriture);
+						if (tmpecriture.dbcompte =code) or (tmpecriture.crcompte=code) then
+							begin
+								write(extrait,'<tr><td>',tmpecriture.dateecriture.day:2,'/',tmpecriture.dateecriture.Month:2,'/',tmpecriture.dateecriture.Year:4,'</td><td>',tmpecriture.LibelleEcriture,'</td>');
+								If tmpEcriture.DbCompte=Code Then
+									Writeln(extrait,'<td>',TmpEcriture.MNTDebit:10:3,'</td><td></td>')
+								Else
+									Writeln(extrait,'<td></td><td>',TmpEcriture.MNTCredit:10:3,'</td>')
+							end;
+					end;
+					Writeln(extrait,'</tr></tbody></table></body></html>');
+					Close(extrait);
+				end
+		End
+	Else
+		writeln('Compte n"existe pas');
+	Close(Fjournal);
+End;
+
+Procedure prExportToCSV(Var FJournal:TFJournal;Var FPlan:TFPLan);
+var
+	code:Integer;
+	tmpecriture:tEcriture;
+	vCSV:Text;
+	strCode:String;
+	SDebit,SCredit:Real;
+Begin
+  Clrscr;
+  writeln('E X P O R T  V E R S  C S V');
+	GoToXY(10,4);Write('CODE: ');
+	GoTOXY(17,4);Read(code);
+	if fnlookupforaccount(code,fplan)<>'Compte n''existe pas. Veillez l''ajouter' then
+    Begin
+    	str(Code,strCode);
+    	Assign(vCSV,strCode+fnlookupforaccount(code,fplan)+'.csv');
+        {$I-}
+            ReSet(fjournal);
+		{$I+}
+		if Ioresult<>0 then
+			writeln('Probleme de fichier Erreur Num: ',ioresult)
+		else
+		Begin
+			ReWrite(vCSV);
+			WriteLn(vCSV,'Date;Libelle;Mnt_Debit;Mnt_Credit');
+            SDebit:=0;
+            SCredit:=0;
+			While Not(EOF(fjournal)) Do
+			Begin
+                Read(FJournal,tmpEcriture);
+                if (tmpEcriture.DBCompte =code) or (tmpEcriture.CRCompte=code) then
+                Begin
+                	with tmpEcriture Do
+                	Begin
+                		If DBCompte=Code Then
+                		Begin
+                            Writeln(vCSV,fnDateToString(DateEcriture),';',LibelleEcriture,';',MntDebit:7:3,';','');
+                            SDebit:=SDebit+MntDebit;
+                        End
+                        Else
+                        Begin
+                            Writeln(vCSV,fnDateToString(DateEcriture),';',LibelleEcriture,';','',';',MntCredit:7:3);
+                            SCredit:=SCredit+MntCredit;
+                        End;
+                    End;
+                End;
+			End;
+			Writeln(vCSV,'',';','',';',SDebit:7:3,';',SCredit:7:3);
+			Close(vCSV);
+        End;
+    End;
+    Close(fJournal);
+End;
+  Procedure prSupprimerEcriture(Var FJournal:TFJournal;Var FPlan:TFPLan);
+	var currentFileSize, position:LongInt;
+	    tmpEcriture:TEcriture;
+			bufferEcriture,newBuffer:Array[1..1000] of TEcriture;
+		  indice,i:0..1000;
+		  nbEcritures:0..1000;
+		  ecritureExist:boolean;
+
+	Begin
+	  ClrScr;
+    {$I-}
+		Reset(FJournal);
+		{$I+}
+	  if IOResult=0 then
+		 Begin
+		   currentFileSize:=FileSize(FJournal);
+		   Gotoxy(10,2);Writeln('           S U P P R E S S I O N    E C R I T U R E             ');
+			 Writeln('Nobre d''ecritures :',currentFileSize:5);
+			 Write('Numero d''ecriture a supprimer :');
+			 Readln(position);
+			 i:=0;
+			 while not Eof(FJournal) do
+			  Begin
+				  i:=i+1;
+					read(FJournal,tmpEcriture);
+					bufferEcriture[i]:= tmpEcriture;
+				end;
+				nbEcritures:=i;
+				for indice:=1 to nbEcritures do
+				Begin
+					if indice<>position then newBuffer[indice]:=bufferEcriture[indice];
+				end;
+				(* rewrite the Buffer again*)
+		    Gotoxy(20,8);Write('Ecriture Numero: ',position, ' est supprimer.');
+				ReWrite(FJournal);
+				for indice:=1 to nbEcritures-1
+			  Do
+					  Write(FJournal,newBuffer[indice]);
+				
+		 end
+		Else
+		  Writeln('File Error Numero:',IOResult);
+
+
+	end;
+
+
+Var
+ ChMenu: 1..5;
+	quit:Boolean;
+
+Begin
+	  Clrscr;
+	  Gotoxy(30,2);  Writeln('Journal comptable');
+	  Gotoxy(20,6);  Writeln('1 : Saisie Piece Comptable.');
+	  Gotoxy(20,8);  Writeln('2 : Liste des Pieces Comptable.');
+	  Gotoxy(20,10); Writeln('3 : Modifier Piece Comptable.');
+	  Gotoxy(20,12); Writeln('4 : Extrait de Compte.');
+		Gotoxy(20,14); Writeln('5 : Supprimer Ecriture.');
+		Gotoxy(20,16); Writeln('6 : Export To CSV');
+		Gotoxy(20,18); Writeln('7 : Retour Au Menu Principal');
+	  Gotoxy(15,25); Write('Votre Choix:');
+	  Repeat
+	    Readln(ChMenu);
+		Until (ChMenu In [1..7]);
+	  Case ChMenu Of
+	    1: prSaisePiece(FJournal,FPlan);
+	    2: prListerPiece(FJournal,FPlan);
+			3: prModifierPiece(FJournal,FPlan);
+			4: prExtraitCompte(FJournal,FPlan,extrait);
+			5: prSupprimerEcriture(FJournal,FPlan);
+            6:prExportToCSV(FJournal,FPlan);
+			7: quit:= true;
+	  End;
+
+End;
+
+
+
+
+(*Main Program*)
+Begin
+  	Assign(extrait,'extrait.html');
+  Assign(FP,'PlanComptable.dat');
+	Assign(FJournal,'Journal.dat');
+  Exit := False;
+  Repeat
+(*Main Loop*)
+    Clrscr;
+    Gotoxy(32,2); Write('Comptabilite');
+    Gotoxy(20,6); Write('1: Gestion plan comptable.');
+    Gotoxy(20,8); Write('2: Gestion des ecritures.');
+		Gotoxy(20,10);Write('3: Quit.');
+
+		Repeat
+			GotoXY(23,25); Write('Veillez Choisir  [ 1 , 2 , 3 ] :');Read(Choix);
+		until  choix in [1..3];
+			Case Choix Of
+	      1 : prGestionPC(FP);
+	      2 : prGestionJournal(FJournal,FP);
+				3 : ClrScr;
+			end;
+
+    Repeat
+      GotoXY(23,25);Write('Voullez vous quitter? [ O / N]   :'); Read(Res);
+    Until (Upcase(Res) In ['O','N']);
+    If Upcase(Res)='O' Then
+      Exit := True;
+  Until (Exit);
+>>>>>>> 839a7f4323a0dbc435eaf7a7686e7e8cab9fcaf5
 End.

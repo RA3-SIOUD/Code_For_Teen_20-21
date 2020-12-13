@@ -70,12 +70,12 @@ Writeln('str6 before insertion',str6);
 Insert('  ** virus **  ',str6,15);
 WriteLn(str6);
 
-(* Delete : (string,integer,integer), procedure with side-effects; Delete(stringSource,nbCaracterFrom);
+(* Delete : (string,string,integer), procedure with side-effects; Delete(stringSource,nbCaracterFrom);
 
 
 (*Fillchar : fill string s with character c until s is n-1 char long.
 Syntax : fillchar(s,n,c);  function side-effects *)
-																											
+
 
 ReadKey;
 End.
